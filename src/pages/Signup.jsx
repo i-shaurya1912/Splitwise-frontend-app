@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import { useTheme } from '../context/ThemeContext';
 
 function Signup() {
   const [name, setName] = useState('');
@@ -10,6 +10,7 @@ function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -33,105 +34,61 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden flex items-center justify-center px-4 sm:px-6">
-      <motion.div
-        className="absolute w-56 h-56 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-purple-600/30 rounded-full blur-3xl"
-        animate={{ x: [0, 100, 0], y: [0, 60, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ top: '10%', left: '5%' }}
-      />
-      <motion.div
-        className="absolute w-56 h-56 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-blue-600/30 rounded-full blur-3xl"
-        animate={{ x: [0, -80, 0], y: [0, 100, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ bottom: '10%', right: '5%' }}
-      />
-
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="relative z-10 w-full max-w-sm sm:max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl"
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d10] flex items-center justify-center px-4 transition-colors">
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 sm:top-6 sm:right-6 w-9 h-9 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+        aria-label="Toggle theme"
       >
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-2xl sm:text-3xl font-bold text-white mb-1 text-center"
-        >
-          Create account
-        </motion.h1>
-        <p className="text-gray-400 text-center mb-6 sm:mb-8 text-xs sm:text-sm">
-          Start splitting expenses with friends
-        </p>
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </button>
 
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-lg mb-4 text-xs sm:text-sm"
-          >
-            {error}
-          </motion.div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 sm:py-3 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              placeholder="Rahul Sharma"
-              required
-            />
+      <div className="w-full max-w-sm">
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <div className="w-8 h-8 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center">
+            <span className="text-white dark:text-gray-900 font-bold text-sm">S</span>
           </div>
+          <span className="text-gray-900 dark:text-white font-semibold text-lg">Splitwise</span>
+        </div>
 
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 sm:py-3 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-7 sm:p-8">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+            Create your account
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            Start splitting expenses with friends
+          </p>
 
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 sm:py-3 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              placeholder="At least 6 characters"
-              required
-            />
-          </div>
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg mb-4 text-sm">
+              {error}
+            </div>
+          )}
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium py-2.5 sm:py-3 text-sm sm:text-base rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            {loading ? 'Creating account...' : 'Sign up'}
-          </motion.button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Full name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white focus:border-gray-900 dark:focus:border-white transition-colors"
+                placeholder="Rahul Sharma"
+                required
+              />
+            </div>
 
-        <p className="text-xs sm:text-sm text-center mt-5 sm:mt-6 text-gray-400">
-          Already have an account?{' '}
-          <Link to="/login" className="text-purple-400 hover:text-purple-300 font-medium">
-            Login
-          </Link>
-        </p>
-      </motion.div>
-    </div>
-  );
-}
-
-export default Signup;
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white focus:border-gray-900 dark:focus:border-white transition-colors"
+                placeholder="name@company.com"
+                required
+              />
