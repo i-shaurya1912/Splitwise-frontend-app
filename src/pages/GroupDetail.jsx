@@ -104,7 +104,7 @@ function GroupDetail() {
         amount: res.data.amount,
         currency: res.data.currency,
         order_id: res.data.orderId,
-        name: 'Splitwise Settlement',
+        name: 'BillBuddy Settlement',
         description: `Payment to ${settlement.to}`,
         handler: async function (response) {
           try {

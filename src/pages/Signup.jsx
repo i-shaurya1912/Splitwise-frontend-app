@@ -46,9 +46,9 @@ function Signup() {
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-8 h-8 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center">
-            <span className="text-white dark:text-gray-900 font-bold text-sm">S</span>
+            <span className="text-white dark:text-gray-900 font-bold text-sm">B</span>
           </div>
-          <span className="text-gray-900 dark:text-white font-semibold text-lg">Splitwise</span>
+          <span className="text-gray-900 dark:text-white font-semibold text-lg">BillBuddy</span>
         </div>
 
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-7 sm:p-8">

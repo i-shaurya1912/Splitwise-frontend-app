@@ -62,9 +62,9 @@ function Dashboard() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center">
-              <span className="text-white dark:text-gray-900 font-bold text-xs">S</span>
+              <span className="text-white dark:text-gray-900 font-bold text-xs">B</span>
             </div>
-            <span className="text-gray-900 dark:text-white font-semibold">Splitwise</span>
+            <span className="text-gray-900 dark:text-white font-semibold">BillBuddy</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <button

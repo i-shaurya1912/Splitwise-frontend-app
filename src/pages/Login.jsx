@@ -45,9 +45,9 @@ function Login() {
         {/* Logo/Brand */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-8 h-8 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center">
-            <span className="text-white dark:text-gray-900 font-bold text-sm">S</span>
+            <span className="text-white dark:text-gray-900 font-bold text-sm">B</span>
           </div>
-          <span className="text-gray-900 dark:text-white font-semibold text-lg">Splitwise</span>
+          <span className="text-gray-900 dark:text-white font-semibold text-lg">BillBuddy</span>
         </div>
 
         {/* Card */}
