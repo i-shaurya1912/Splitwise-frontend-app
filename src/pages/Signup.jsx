@@ -92,3 +92,41 @@ function Signup() {
                 placeholder="name@company.com"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white focus:border-gray-900 dark:focus:border-white transition-colors"
+                placeholder="At least 6 characters"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 transition-colors mt-2"
+            >
+              {loading ? 'Creating account...' : 'Sign up'}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-sm text-center mt-5 text-gray-500 dark:text-gray-400">
+          Already have an account?{' '}
+          <Link to="/login" className="text-gray-900 dark:text-white font-medium hover:underline">
+            Log in
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default Signup;
