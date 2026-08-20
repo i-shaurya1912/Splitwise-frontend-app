@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getGroupById, addMember } from '../api/groups';
@@ -27,7 +27,7 @@ function GroupDetail() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchAll = async () => {
+  const refreshGroupData = useCallback(async () => {
     try {
       const [groupRes, expensesRes, balancesRes, settlementsRes] = await Promise.all([
         getGroupById(groupId),
@@ -35,6 +35,7 @@ function GroupDetail() {
         getBalances(groupId),
         getSettlements(groupId),
       ]);
+
       setGroup(groupRes);
       setExpenses(expensesRes.data);
       setBalances(balancesRes.data);
@@ -44,11 +45,11 @@ function GroupDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
   useEffect(() => {
-    fetchAll();
-  }, [groupId]);
+    void refreshGroupData();
+  }, [refreshGroupData]);
 
   const toggleMember = (memberId) => {
     setSelectedMembers((prev) =>
@@ -68,7 +69,7 @@ function GroupDetail() {
       setAmount('');
       setSelectedMembers([]);
       setShowExpenseModal(false);
-      fetchAll();
+      void refreshGroupData();
     } catch (err) {
       setError(err.response?.data?.message || 'Could not add expense');
     } finally {
@@ -86,7 +87,7 @@ function GroupDetail() {
       await addMember(groupId, memberEmail);
       setMemberEmail('');
       setShowMemberModal(false);
-      fetchAll();
+      void refreshGroupData();
     } catch (err) {
       setError(err.response?.data?.message || 'Could not add member');
     } finally {
@@ -114,8 +115,8 @@ function GroupDetail() {
               paymentId: res.data.paymentId,
             });
             alert('Payment successful!');
-            fetchAll();
-          } catch (err) {
+            void refreshGroupData();
+          } catch {
             alert('Payment verification failed');
           }
         },
@@ -187,19 +188,22 @@ function GroupDetail() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
-          {['expenses', 'balances', 'settlements'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors ${
-                activeTab === tab
-                  ? 'text-gray-900 dark:text-white border-gray-900 dark:border-white'
-                  : 'text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-600 dark:hover:text-gray-300'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+          {['expenses', 'balances', 'settlements'].map((tab) => {
+            const isActive = activeTab === tab;
+            const tabClassName = isActive
+              ? 'px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors text-gray-900 border-gray-900 dark:text-white dark:border-white'
+              : 'px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors text-gray-400 border-transparent dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300';
+
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={tabClassName}
+              >
+                {tab}
+              </button>
+            );
+          })}
         </div>
 
         {/* Tab content */}
