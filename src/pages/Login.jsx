@@ -24,7 +24,11 @@ function Login() {
       login(res.data.user, res.data.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      if (err.response?.data?.needsVerification) {
+        navigate('/verify-otp', { state: { email: err.response.data.email } });
+      } else {
+        setError(err.response?.data?.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }

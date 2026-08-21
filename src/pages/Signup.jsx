@@ -20,7 +20,7 @@ function Signup() {
 
     try {
       await API.post('/auth/signup', { name, email, password });
-      navigate('/login');
+      navigate('/verify-otp', { state: { email } });
     } catch (err) {
       const errors = err.response?.data?.errors;
       if (errors && errors.length > 0) {

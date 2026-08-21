@@ -4,6 +4,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import GroupDetail from './pages/GroupDetail';
+import VerifyOTP from './pages/VerifyOTP';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/verify-otp" element={<VerifyOTP />} />
       <Route path="/" element={<Navigate to="/dashboard" />} />
     </Routes>
   );
