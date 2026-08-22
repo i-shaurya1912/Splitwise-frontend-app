@@ -1,20 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getGroupById, addMember } from '../api/groups';
 import { getGroupExpenses, createExpense, getBalances, getSettlements } from '../api/expenses';
-import { createOrder, verifyPayment } from '../api/payments';
+import { createOrder, verifyPayment, getGroupPayments } from '../api/payments';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 function GroupDetail() {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
 
   const [group, setGroup] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [balances, setBalances] = useState([]);
   const [settlements, setSettlements] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('expenses');
 
@@ -22,34 +25,42 @@ function GroupDetail() {
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [memberEmail, setMemberEmail] = useState('');
+  const [paidBy, setPaidBy] = useState('');
+  const [memberIdentifier, setMemberIdentifier] = useState('');
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const refreshGroupData = useCallback(async () => {
+  const fetchAll = async () => {
     try {
-      const [groupRes, expensesRes, balancesRes, settlementsRes] = await Promise.all([
+      const [groupRes, expensesRes, balancesRes, settlementsRes, paymentsRes] = await Promise.all([
         getGroupById(groupId),
         getGroupExpenses(groupId),
         getBalances(groupId),
         getSettlements(groupId),
+        getGroupPayments(groupId),
       ]);
-
       setGroup(groupRes);
       setExpenses(expensesRes.data);
       setBalances(balancesRes.data);
       setSettlements(settlementsRes.data);
+      setPayments(paymentsRes.data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchAll();
   }, [groupId]);
 
   useEffect(() => {
-    void refreshGroupData();
-  }, [refreshGroupData]);
+    if (user && !paidBy) {
+      setPaidBy(user.id);
+    }
+  }, [user]);
 
   const toggleMember = (memberId) => {
     setSelectedMembers((prev) =>
@@ -64,12 +75,12 @@ function GroupDetail() {
 
     setSubmitting(true);
     try {
-      await createExpense(description, parseFloat(amount), groupId, selectedMembers);
+      await createExpense(description, parseFloat(amount), groupId, selectedMembers, paidBy);
       setDescription('');
       setAmount('');
       setSelectedMembers([]);
       setShowExpenseModal(false);
-      void refreshGroupData();
+      fetchAll();
     } catch (err) {
       setError(err.response?.data?.message || 'Could not add expense');
     } finally {
@@ -80,14 +91,14 @@ function GroupDetail() {
   const handleAddMember = async (e) => {
     e.preventDefault();
     setError('');
-    if (!memberEmail.trim()) return;
+    if (!memberIdentifier.trim()) return;
 
     setSubmitting(true);
     try {
-      await addMember(groupId, memberEmail);
-      setMemberEmail('');
+      await addMember(groupId, memberIdentifier);
+      setMemberIdentifier('');
       setShowMemberModal(false);
-      void refreshGroupData();
+      fetchAll();
     } catch (err) {
       setError(err.response?.data?.message || 'Could not add member');
     } finally {
@@ -104,7 +115,7 @@ function GroupDetail() {
         amount: res.data.amount,
         currency: res.data.currency,
         order_id: res.data.orderId,
-        name: 'BillBuddy Settlement',
+        name: 'Splitwise Settlement',
         description: `Payment to ${settlement.to}`,
         handler: async function (response) {
           try {
@@ -115,8 +126,8 @@ function GroupDetail() {
               paymentId: res.data.paymentId,
             });
             alert('Payment successful!');
-            void refreshGroupData();
-          } catch {
+            fetchAll();
+          } catch (err) {
             alert('Payment verification failed');
           }
         },
@@ -187,23 +198,20 @@ function GroupDetail() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
-          {['expenses', 'balances', 'settlements'].map((tab) => {
-            const isActive = activeTab === tab;
-            const tabClassName = isActive
-              ? 'px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors text-gray-900 border-gray-900 dark:text-white dark:border-white'
-              : 'px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors text-gray-400 border-transparent dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300';
-
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={tabClassName}
-              >
-                {tab}
-              </button>
-            );
-          })}
+        <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
+          {['expenses', 'balances', 'settlements', 'payments'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === tab
+                  ? 'text-gray-900 dark:text-white border-gray-900 dark:border-white'
+                  : 'text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-600 dark:hover:text-gray-300'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
 
         {/* Tab content */}
@@ -303,6 +311,61 @@ function GroupDetail() {
               )}
             </motion.div>
           )}
+
+          {activeTab === 'payments' && (
+            <motion.div
+              key="payments"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-3"
+            >
+              {payments.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-500 text-sm text-center py-8">No payments yet</p>
+              ) : (
+                payments.map((p) => (
+                  <div
+                    key={p._id}
+                    className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                        {p.from.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-gray-900 dark:text-white text-sm font-medium">
+                          {p.from.name} → {p.to.name}
+                        </p>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs">
+                          {new Date(p.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric', month: 'short', year: 'numeric',
+                          })}
+                          {' · '}
+                          {new Date(p.createdAt).toLocaleTimeString('en-IN', {
+                            hour: '2-digit', minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-900 dark:text-white font-semibold">₹{p.amount}</p>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${
+                          p.status === 'paid'
+                            ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
+                            : p.status === 'pending'
+                            ? 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400'
+                            : 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400'
+                        }`}
+                      >
+                        {p.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
@@ -321,7 +384,7 @@ function GroupDetail() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 w-full max-w-sm"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto"
             >
               <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Add expense</h3>
               {error && (
@@ -345,6 +408,23 @@ function GroupDetail() {
                   placeholder="Amount"
                   className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white"
                 />
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Paid by
+                  </label>
+                  <select
+                    value={paidBy}
+                    onChange={(e) => setPaidBy(e.target.value)}
+                    className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white"
+                  >
+                    {group?.members.map((m) => (
+                      <option key={m._id} value={m._id} className="bg-white dark:bg-gray-900">
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -420,10 +500,10 @@ function GroupDetail() {
               )}
               <form onSubmit={handleAddMember} className="space-y-3">
                 <input
-                  type="email"
-                  value={memberEmail}
-                  onChange={(e) => setMemberEmail(e.target.value)}
-                  placeholder="friend@example.com"
+                  type="text"
+                  value={memberIdentifier}
+                  onChange={(e) => setMemberIdentifier(e.target.value)}
+                  placeholder="Email address"
                   autoFocus
                   className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white"
                 />
