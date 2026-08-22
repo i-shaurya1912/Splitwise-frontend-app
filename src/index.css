@@ -1,6 +1,52 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* body {
-  font-family: 'Space Grotesk', sans-serif;
-} */
+body {
+  font-family: 'Geist', sans-serif;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 20px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Neumorphic utilities — light mode */
+.neu {
+  background: #F3F3F4;
+  box-shadow: -6px -6px 12px #FFFFFF, 6px 6px 12px #D1D9E6;
+}
+.neu-inset {
+  background: #F3F3F4;
+  box-shadow: inset -4px -4px 8px #FFFFFF, inset 4px 4px 8px #D1D9E6;
+}
+.neu-sm {
+  background: #F3F3F4;
+  box-shadow: -3px -3px 6px #FFFFFF, 3px 3px 6px #D1D9E6;
+}
+
+/* Neumorphic utilities — dark mode */
+.dark .neu {
+  background: #1e1f22;
+  box-shadow: -6px -6px 12px #26282c, 6px 6px 12px #121314;
+}
+.dark .neu-inset {
+  background: #1e1f22;
+  box-shadow: inset -4px -4px 8px #26282c, inset 4px 4px 8px #121314;
+}
+.dark .neu-sm {
+  background: #1e1f22;
+  box-shadow: -3px -3px 6px #26282c, 3px 3px 6px #121314;
+}
+
+.neu-btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.neu-btn:active {
+  transform: scale(0.97);
+  box-shadow: inset -4px -4px 8px #FFFFFF, inset 4px 4px 8px #D1D9E6;
+}
+.dark .neu-btn:active {
+  box-shadow: inset -4px -4px 8px #26282c, inset 4px 4px 8px #121314;
+}

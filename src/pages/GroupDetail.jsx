@@ -7,6 +7,9 @@ import { createOrder, verifyPayment, getGroupPayments } from '../api/payments';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
+const AVATAR_COLORS = ['#a78bfa', '#f472b6', '#fb923c', '#34d399', '#38bdf8', '#c084fc'];
+const getAvatarColor = (name) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+
 function GroupDetail() {
   const { groupId } = useParams();
   const navigate = useNavigate();
@@ -20,6 +23,7 @@ function GroupDetail() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('expenses');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
@@ -57,9 +61,7 @@ function GroupDetail() {
   }, [groupId]);
 
   useEffect(() => {
-    if (user && !paidBy) {
-      setPaidBy(user.id);
-    }
+    if (user && !paidBy) setPaidBy(user.id);
   }, [user]);
 
   const toggleMember = (memberId) => {
@@ -109,13 +111,12 @@ function GroupDetail() {
   const handlePay = async (settlement) => {
     try {
       const res = await createOrder(settlement.amount, settlement.toUserId, groupId);
-
       const options = {
         key: res.data.key,
         amount: res.data.amount,
         currency: res.data.currency,
         order_id: res.data.orderId,
-        name: 'Splitwise Settlement',
+        name: 'SplitSmart Settlement',
         description: `Payment to ${settlement.to}`,
         handler: async function (response) {
           try {
@@ -131,9 +132,8 @@ function GroupDetail() {
             alert('Payment verification failed');
           }
         },
-        theme: { color: '#111827' },
+        theme: { color: '#006b56' },
       };
-
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
@@ -142,71 +142,71 @@ function GroupDetail() {
     }
   };
 
+  const filteredExpenses = expenses.filter((exp) =>
+    exp.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d10] flex items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+      <div className="min-h-screen bg-[#F3F3F4] dark:bg-[#151618] flex items-center justify-center">
+        <p className="text-[#575766] dark:text-gray-400">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d10] transition-colors">
-      {/* Navbar */}
-      <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[#F3F3F4] dark:bg-[#151618] transition-colors pb-10">
+      {/* Top bar */}
+      <header className="sticky top-0 z-40 bg-[#F3F3F4] dark:bg-[#151618] px-5 pt-4 pb-2">
+        <div className="max-w-5xl mx-auto flex items-center justify-between h-14">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm"
+              className="w-9 h-9 rounded-full neu neu-btn flex items-center justify-center text-[#575766] dark:text-gray-300 flex-shrink-0"
             >
-              ← Back
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_back</span>
             </button>
-            <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-              {group?.name}
-            </h1>
+            <h1 className="text-base font-semibold text-[#1a1c1d] dark:text-white truncate">{group?.name}</h1>
           </div>
-          <button
-            onClick={toggleTheme}
-            className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 transition-colors text-sm"
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-        </div>
-      </nav>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        {/* Members + Add member button */}
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            {group?.members.map((m) => (
-              <span
-                key={m._id}
-                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 text-xs px-3 py-1.5 rounded-full"
-              >
-                {m.name}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setShowMemberModal(true)}
+              className="w-9 h-9 rounded-full neu neu-btn flex items-center justify-center text-[#006b56] dark:text-[#49ddb9]"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>group_add</span>
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-full neu neu-btn flex items-center justify-center text-[#006b56] dark:text-[#49ddb9]"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                {theme === 'dark' ? 'light_mode' : 'dark_mode'}
               </span>
-            ))}
+            </button>
           </div>
-          <button
-            onClick={() => setShowMemberModal(true)}
-            className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-800 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            + Add member
-          </button>
+        </div>
+      </header>
+
+      <div className="max-w-5xl mx-auto px-5">
+        {/* Members */}
+        <div className="flex items-center gap-2 flex-wrap mb-5">
+          {group?.members.map((m) => (
+            <span key={m._id} className="neu-sm text-[#575766] dark:text-gray-300 text-xs px-3 py-1.5 rounded-full">
+              {m.name}
+            </span>
+          ))}
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
+        <div className="flex gap-1 mb-5 overflow-x-auto neu-inset rounded-xl p-1">
           {['expenses', 'balances', 'settlements', 'payments'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors whitespace-nowrap ${
+              className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium capitalize rounded-lg whitespace-nowrap transition-all ${
                 activeTab === tab
-                  ? 'text-gray-900 dark:text-white border-gray-900 dark:border-white'
-                  : 'text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-600 dark:hover:text-gray-300'
+                  ? 'neu text-[#006b56] dark:text-[#49ddb9]'
+                  : 'text-[#575766] dark:text-gray-500'
               }`}
             >
               {tab}
@@ -214,40 +214,50 @@ function GroupDetail() {
           ))}
         </div>
 
-        {/* Tab content */}
         <AnimatePresence mode="wait">
           {activeTab === 'expenses' && (
-            <motion.div
-              key="expenses"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="flex justify-end mb-4">
+            <motion.div key="expenses" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="flex gap-3 mb-4">
+                <div className="relative flex-1">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#575766] dark:text-gray-500" style={{ fontSize: 18 }}>
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search expenses..."
+                    className="w-full neu-inset rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1a1c1d] dark:text-white placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-[#006b56]/40"
+                  />
+                </div>
                 <button
                   onClick={() => setShowExpenseModal(true)}
-                  className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+                  className="bg-[#006b56] text-white text-sm font-medium px-4 py-2.5 rounded-xl neu-btn flex-shrink-0"
                 >
-                  + Add expense
+                  + Add
                 </button>
               </div>
 
-              {expenses.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-500 text-sm text-center py-8">No expenses yet</p>
+              {filteredExpenses.length === 0 ? (
+                <p className="text-[#575766] dark:text-gray-500 text-sm text-center py-8">
+                  {searchQuery ? 'No matching expenses' : 'No expenses yet'}
+                </p>
               ) : (
                 <div className="space-y-3">
-                  {expenses.map((exp) => (
-                    <div
-                      key={exp._id}
-                      className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex justify-between items-center"
-                    >
-                      <div>
-                        <p className="text-gray-900 dark:text-white font-medium">{exp.description}</p>
-                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                          Paid by {exp.paidBy.name} · Split among {exp.splitBetween.length}
-                        </p>
+                  {filteredExpenses.map((exp) => (
+                    <div key={exp._id} className="neu rounded-xl p-4 flex justify-between items-center">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-lg neu-inset flex items-center justify-center text-[#006b56] dark:text-[#49ddb9] flex-shrink-0">
+                          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>receipt</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[#1a1c1d] dark:text-white font-medium truncate">{exp.description}</p>
+                          <p className="text-[#575766] dark:text-gray-400 text-xs mt-0.5">
+                            Paid by {exp.paidBy.name} · Split among {exp.splitBetween.length}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-gray-900 dark:text-white font-semibold">₹{exp.amount}</p>
+                      <p className="text-[#1a1c1d] dark:text-white font-semibold flex-shrink-0 ml-2">₹{exp.amount}</p>
                     </div>
                   ))}
                 </div>
@@ -256,20 +266,11 @@ function GroupDetail() {
           )}
 
           {activeTab === 'balances' && (
-            <motion.div
-              key="balances"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="space-y-3"
-            >
+            <motion.div key="balances" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
               {balances.map((b) => (
-                <div
-                  key={b.email}
-                  className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex justify-between items-center"
-                >
-                  <p className="text-gray-900 dark:text-white font-medium">{b.name}</p>
-                  <p className={`font-semibold ${b.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                <div key={b.email} className="neu rounded-xl p-4 flex justify-between items-center">
+                  <p className="text-[#1a1c1d] dark:text-white font-medium">{b.name}</p>
+                  <p className={`font-semibold ${b.balance >= 0 ? 'text-[#1cc29f]' : 'text-[#EA4C89]'}`}>
                     {b.balance >= 0 ? '+' : ''}₹{b.balance.toFixed(2)}
                   </p>
                 </div>
@@ -278,31 +279,22 @@ function GroupDetail() {
           )}
 
           {activeTab === 'settlements' && (
-            <motion.div
-              key="settlements"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="space-y-3"
-            >
+            <motion.div key="settlements" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
               {settlements.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-500 text-sm text-center py-8">All settled up 🎉</p>
+                <p className="text-[#575766] dark:text-gray-500 text-sm text-center py-8">All settled up 🎉</p>
               ) : (
                 settlements.map((s, i) => (
-                  <div
-                    key={i}
-                    className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between"
-                  >
+                  <div key={i} className="neu rounded-xl p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-gray-700 dark:text-gray-300 text-sm">
-                        <span className="text-gray-900 dark:text-white font-medium">{s.from}</span> owes{' '}
-                        <span className="text-gray-900 dark:text-white font-medium">{s.to}</span>
+                      <p className="text-[#575766] dark:text-gray-300 text-sm">
+                        <span className="text-[#1a1c1d] dark:text-white font-medium">{s.from}</span> owes{' '}
+                        <span className="text-[#1a1c1d] dark:text-white font-medium">{s.to}</span>
                       </p>
-                      <p className="text-gray-900 dark:text-white font-semibold mt-0.5">₹{s.amount}</p>
+                      <p className="text-[#1a1c1d] dark:text-white font-semibold mt-0.5">₹{s.amount}</p>
                     </div>
                     <button
                       onClick={() => handlePay(s)}
-                      className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+                      className="bg-[#006b56] text-white text-xs font-medium px-3 py-2 rounded-xl neu-btn"
                     >
                       Pay
                     </button>
@@ -313,52 +305,42 @@ function GroupDetail() {
           )}
 
           {activeTab === 'payments' && (
-            <motion.div
-              key="payments"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="space-y-3"
-            >
+            <motion.div key="payments" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
               {payments.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-500 text-sm text-center py-8">No payments yet</p>
+                <p className="text-[#575766] dark:text-gray-500 text-sm text-center py-8">No payments yet</p>
               ) : (
                 payments.map((p) => (
-                  <div
-                    key={p._id}
-                    className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                  <div key={p._id} className="neu rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0"
+                        style={{ backgroundColor: getAvatarColor(p.from.name) }}
+                      >
                         {p.from.name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <p className="text-gray-900 dark:text-white text-sm font-medium">
+                      <div className="min-w-0">
+                        <p className="text-[#1a1c1d] dark:text-white text-sm font-medium truncate">
                           {p.from.name} → {p.to.name}
                         </p>
-                        <p className="text-gray-500 dark:text-gray-400 text-xs">
-                          {new Date(p.createdAt).toLocaleDateString('en-IN', {
-                            day: 'numeric', month: 'short', year: 'numeric',
-                          })}
+                        <p className="text-[#575766] dark:text-gray-400 text-xs">
+                          {new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                           {' · '}
-                          {new Date(p.createdAt).toLocaleTimeString('en-IN', {
-                            hour: '2-digit', minute: '2-digit',
-                          })}
+                          {new Date(p.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-gray-900 dark:text-white font-semibold">₹{p.amount}</p>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <p className="text-[#1a1c1d] dark:text-white font-semibold">₹{p.amount}</p>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${
+                        className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 ${
                           p.status === 'paid'
-                            ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
+                            ? 'bg-[#d4f5ec] text-[#006b56]'
                             : p.status === 'pending'
-                            ? 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400'
-                            : 'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-[#ffdad6] text-[#93000a]'
                         }`}
                       >
-                        {p.status}
+                        {p.status.toUpperCase()}
                       </span>
                     </div>
                   </div>
@@ -373,99 +355,62 @@ function GroupDetail() {
       <AnimatePresence>
         {showExpenseModal && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4"
             onClick={() => setShowExpenseModal(false)}
           >
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto"
+              className="neu rounded-2xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#F3F3F4] dark:bg-[#1e1f22]"
             >
-              <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Add expense</h3>
-              {error && (
-                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg mb-3 text-sm">
-                  {error}
-                </div>
-              )}
+              <h3 className="text-[#1a1c1d] dark:text-white font-semibold mb-4">Add expense</h3>
+              {error && <div className="bg-[#ffdad6] text-[#93000a] px-3 py-2 rounded-xl mb-3 text-sm">{error}</div>}
               <form onSubmit={handleAddExpense} className="space-y-3">
                 <input
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g. Hotel booking"
-                  autoFocus
-                  className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white"
+                  type="text" value={description} onChange={(e) => setDescription(e.target.value)}
+                  placeholder="e.g. Hotel booking" autoFocus
+                  className="w-full neu-inset rounded-xl px-4 py-2.5 text-sm text-[#1a1c1d] dark:text-white placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-[#006b56]/40"
                 />
                 <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Amount"
-                  className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white"
+                  type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Amount" min="0.01" step="0.01"
+                  className="w-full neu-inset rounded-xl px-4 py-2.5 text-sm text-[#1a1c1d] dark:text-white placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-[#006b56]/40"
                 />
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Paid by
-                  </label>
+                  <label className="block text-xs font-medium text-[#575766] dark:text-gray-400 mb-2 uppercase tracking-wide">Paid by</label>
                   <select
-                    value={paidBy}
-                    onChange={(e) => setPaidBy(e.target.value)}
-                    className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white"
+                    value={paidBy} onChange={(e) => setPaidBy(e.target.value)}
+                    className="w-full neu-inset rounded-xl px-4 py-2.5 text-sm text-[#1a1c1d] dark:text-white border-none focus:outline-none focus:ring-2 focus:ring-[#006b56]/40"
                   >
                     {group?.members.map((m) => (
-                      <option key={m._id} value={m._id} className="bg-white dark:bg-gray-900">
-                        {m.name}
-                      </option>
+                      <option key={m._id} value={m._id}>{m.name}</option>
                     ))}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Split between
-                  </label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                  <label className="block text-xs font-medium text-[#575766] dark:text-gray-400 mb-2 uppercase tracking-wide">Split between</label>
+                  <div className="neu-inset rounded-xl p-3 space-y-2 max-h-32 overflow-y-auto">
                     {group?.members.map((m) => (
-                      <label
-                        key={m._id}
-                        className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
-                      >
+                      <label key={m._id} className="flex items-center gap-2 text-sm text-[#1a1c1d] dark:text-gray-300 cursor-pointer">
                         <input
-                          type="checkbox"
-                          checked={selectedMembers.includes(m._id)}
+                          type="checkbox" checked={selectedMembers.includes(m._id)}
                           onChange={() => toggleMember(m._id)}
-                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 accent-gray-900 dark:accent-white"
+                          className="w-4 h-4 rounded accent-[#006b56]"
                         />
                         {m.name}
                       </label>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    {selectedMembers.length === 0
-                      ? 'Nothing selected — will split equally among all members'
-                      : `Splitting among ${selectedMembers.length} member(s)`}
+                  <p className="text-xs text-[#575766] dark:text-gray-500 mt-1">
+                    {selectedMembers.length === 0 ? 'Splits equally among all members' : `Splitting among ${selectedMembers.length} member(s)`}
                   </p>
                 </div>
-
                 <div className="flex gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowExpenseModal(false)}
-                    className="flex-1 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 text-sm py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
+                  <button type="button" onClick={() => setShowExpenseModal(false)} className="flex-1 neu neu-btn text-[#575766] dark:text-gray-300 text-sm py-2.5 rounded-xl">
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                  >
+                  <button type="submit" disabled={submitting} className="flex-1 bg-[#006b56] text-white text-sm font-medium py-2.5 rounded-xl neu-btn disabled:opacity-50">
                     {submitting ? 'Adding...' : 'Add'}
                   </button>
                 </div>
@@ -479,47 +424,28 @@ function GroupDetail() {
       <AnimatePresence>
         {showMemberModal && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4"
             onClick={() => setShowMemberModal(false)}
           >
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 w-full max-w-sm"
+              className="neu rounded-2xl p-6 w-full max-w-sm bg-[#F3F3F4] dark:bg-[#1e1f22]"
             >
-              <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Add member</h3>
-              {error && (
-                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg mb-3 text-sm">
-                  {error}
-                </div>
-              )}
+              <h3 className="text-[#1a1c1d] dark:text-white font-semibold mb-4">Add member</h3>
+              {error && <div className="bg-[#ffdad6] text-[#93000a] px-3 py-2 rounded-xl mb-3 text-sm">{error}</div>}
               <form onSubmit={handleAddMember} className="space-y-3">
                 <input
-                  type="text"
-                  value={memberIdentifier}
-                  onChange={(e) => setMemberIdentifier(e.target.value)}
-                  placeholder="Email address"
-                  autoFocus
-                  className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white"
+                  type="text" value={memberIdentifier} onChange={(e) => setMemberIdentifier(e.target.value)}
+                  placeholder="Email address" autoFocus
+                  className="w-full neu-inset rounded-xl px-4 py-2.5 text-sm text-[#1a1c1d] dark:text-white placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-[#006b56]/40"
                 />
                 <div className="flex gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowMemberModal(false)}
-                    className="flex-1 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 text-sm py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
+                  <button type="button" onClick={() => setShowMemberModal(false)} className="flex-1 neu neu-btn text-[#575766] dark:text-gray-300 text-sm py-2.5 rounded-xl">
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                  >
+                  <button type="submit" disabled={submitting} className="flex-1 bg-[#006b56] text-white text-sm font-medium py-2.5 rounded-xl neu-btn disabled:opacity-50">
                     {submitting ? 'Adding...' : 'Add'}
                   </button>
                 </div>

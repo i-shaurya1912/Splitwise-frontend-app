@@ -17,110 +17,102 @@ function Signup() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       await API.post('/auth/signup', { name, email, password });
       navigate('/verify-otp', { state: { email } });
     } catch (err) {
       const errors = err.response?.data?.errors;
-      if (errors && errors.length > 0) {
-        setError(errors[0].msg);
-      } else {
-        setError(err.response?.data?.message || 'Signup failed');
-      }
+      setError(errors?.[0]?.msg || err.response?.data?.message || 'Signup failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d10] flex items-center justify-center px-4 transition-colors">
+    <div className="min-h-screen bg-[#F3F3F4] dark:bg-[#151618] flex items-center justify-center px-4 transition-colors">
       <button
         onClick={toggleTheme}
-        className="fixed top-4 right-4 sm:top-6 sm:right-6 w-9 h-9 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+        className="fixed top-5 right-5 w-10 h-10 rounded-full neu neu-btn flex items-center justify-center text-[#006b56] dark:text-[#49ddb9]"
         aria-label="Toggle theme"
       >
-        {theme === 'dark' ? '☀️' : '🌙'}
+        <span className="material-symbols-outlined">
+          {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+        </span>
       </button>
 
       <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center">
-            <span className="text-white dark:text-gray-900 font-bold text-sm">B</span>
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-14 h-14 rounded-2xl neu flex items-center justify-center mb-3 text-[#006b56] dark:text-[#49ddb9]">
+            <span className="material-symbols-outlined" style={{ fontSize: 28 }}>
+              account_balance_wallet
+            </span>
           </div>
-          <span className="text-gray-900 dark:text-white font-semibold text-lg">BillBuddy</span>
+          <h1 className="text-xl font-bold text-[#1a1c1d] dark:text-white tracking-tight">SplitSmart</h1>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-7 sm:p-8">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-            Create your account
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-            Start splitting expenses with friends
-          </p>
+        <div className="neu rounded-2xl p-7">
+          <h2 className="text-lg font-semibold text-[#1a1c1d] dark:text-white mb-1">Create account</h2>
+          <p className="text-[#575766] dark:text-gray-400 text-sm mb-6">Start splitting expenses smartly</p>
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg mb-4 text-sm">
+            <div className="bg-[#ffdad6] text-[#93000a] px-3 py-2 rounded-xl mb-4 text-sm">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              <label className="block text-xs font-medium text-[#575766] dark:text-gray-400 mb-1.5 uppercase tracking-wide">
                 Full name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white focus:border-gray-900 dark:focus:border-white transition-colors"
+                className="w-full neu-inset rounded-xl px-4 py-2.5 text-sm text-[#1a1c1d] dark:text-white placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-[#006b56]/40"
                 placeholder="Rahul Sharma"
                 required
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              <label className="block text-xs font-medium text-[#575766] dark:text-gray-400 mb-1.5 uppercase tracking-wide">
                 Email
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white focus:border-gray-900 dark:focus:border-white transition-colors"
-                placeholder="name@company.com"
+                className="w-full neu-inset rounded-xl px-4 py-2.5 text-sm text-[#1a1c1d] dark:text-white placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-[#006b56]/40"
+                placeholder="you@example.com"
                 required
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              <label className="block text-xs font-medium text-[#575766] dark:text-gray-400 mb-1.5 uppercase tracking-wide">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-white focus:border-gray-900 dark:focus:border-white transition-colors"
+                className="w-full neu-inset rounded-xl px-4 py-2.5 text-sm text-[#1a1c1d] dark:text-white placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-[#006b56]/40"
                 placeholder="At least 6 characters"
                 required
               />
             </div>
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 transition-colors mt-2"
+              className="w-full bg-[#006b56] text-white font-medium text-sm py-3 rounded-xl neu-btn hover:opacity-90 disabled:opacity-50 transition-opacity mt-2"
             >
               {loading ? 'Creating account...' : 'Sign up'}
             </button>
           </form>
         </div>
 
-        <p className="text-sm text-center mt-5 text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-center mt-5 text-[#575766] dark:text-gray-400">
           Already have an account?{' '}
-          <Link to="/login" className="text-gray-900 dark:text-white font-medium hover:underline">
+          <Link to="/login" className="text-[#006b56] dark:text-[#49ddb9] font-medium hover:underline">
             Log in
           </Link>
         </p>
